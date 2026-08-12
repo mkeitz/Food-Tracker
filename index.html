@@ -75,19 +75,13 @@
   @media (max-width: 860px) {
     .layout { grid-template-columns: 1fr; }
     .ledger-panel {
-      position: fixed;
-      top: 0; right: 0;
-      height: 100vh;
-      width: min(88vw, 380px);
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-      z-index: 50;
-      overflow-y: auto;
-      box-shadow: -8px 0 24px rgba(0,0,0,0.35);
+      max-height: none;
     }
-    .ledger-panel.open { transform: translateX(0); }
     .ledger-tab {
-      display: flex;
+      display: none;
+    }
+    .backdrop {
+      display: none;
     }
   }
 
