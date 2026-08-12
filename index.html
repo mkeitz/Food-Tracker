@@ -246,17 +246,45 @@
   }
 
   .day-stamp {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     background: var(--gold);
     color: #21201a;
-    padding: 0.25rem 0.6rem;
+    padding: 0.4rem 0.7rem;
     border-radius: 2px;
     margin-bottom: 0.6rem;
-  }
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .day-stamp:hover { background: #d9a13a; }
+
+    .day-stamp .chevron {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 0.7rem;
+}
+
+    .day-stamp.expanded .chevron {
+    transform: rotate(90deg);
+}
+
+    .day-entries {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.25s ease;
+}
+
+    .day-entries.expanded {
+    max-height: 1000px;
+}
 
   .stub {
     background: var(--paper);
@@ -503,19 +531,30 @@
       const dates = Object.keys(byDate).sort().reverse();
 
       let html = '';
-      dates.forEach(function (date) {
+        dates.forEach(function (date, idx) {
+        const expanded = idx === 0; // most recent day starts open, rest start collapsed
         html += '<div class="day-group">';
-        html += '<div class="day-stamp">' + formatDateLabel(date) + '</div>';
+        html += '<button type="button" class="day-stamp' + (expanded ? ' expanded' : '') +
+                '" onclick="toggleDay(this)">' +
+                '<span>' + formatDateLabel(date) + '</span>' +
+                '<span class="chevron">▶</span></button>';
+        html += '<div class="day-entries' + (expanded ? ' expanded' : '') + '">';
         byDate[date].forEach(function (en) {
-          html += '<div class="stub"><span class="food-name">' + escapeHtml(en.food) + '</span>' +
-                  '<span class="qty">' + escapeHtml(String(en.quantity)) + ' ' + escapeHtml(en.unit) + '</span></div>';
+            html += '<div class="stub"><span class="food-name">' + escapeHtml(en.food) + '</span>' +
+                    '<span class="qty">' + escapeHtml(String(en.quantity)) + ' ' + escapeHtml(en.unit) + '</span></div>';
         });
-        html += '</div>';
-      });
-      ledgerContent.innerHTML = html;
+        html += '</div></div>';
+        });
+        ledgerContent.innerHTML = html;
     } catch (err) {
       ledgerContent.innerHTML = '<div class="empty-state">Could not load entries — ' + escapeHtml(err.message) + '</div>';
     }
+  }
+
+  function toggleDay(stampEl) {
+    stampEl.classList.toggle('expanded');
+    const entries = stampEl.nextElementSibling;
+    entries.classList.toggle('expanded');
   }
 
   function escapeHtml(str) {
