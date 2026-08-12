@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Daily Ledger — Food Diary</title>
+<title>Zara's Food Diary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -286,6 +286,67 @@
     max-height: 1000px;
 }
 
+
+
+  .day-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+  .day-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--teal);
+}
+
+  .day-stamp .day-label {
+    flex: 1;
+    cursor: pointer;
+}
+
+  .calc-macros-btn {
+    width: 100%;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 3px;
+    background: var(--teal);
+    color: #f3efdf;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}
+
+  .calc-macros-btn:hover { background: #365a53; }
+  .calc-macros-btn:disabled { opacity: 0.6; cursor: default; }
+
+  .macros-total {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+  .macro-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.2rem 0;
+}
+
+  .macros-missing {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--gold);
+    margin-bottom: 1.25rem;
+}
+
   .stub {
     background: var(--paper);
     color: var(--ink);
@@ -405,8 +466,10 @@
   </div>
 
   <div class="ledger-panel" id="ledgerPanel">
-    <h2>Ledger <button class="close-ledger" onclick="toggleLedger(false)">✕</button></h2>
+    <h2>Log <button class="close-ledger" onclick="toggleLedger(false)">✕</button></h2>
     <div class="sub">previous days, most recent first</div>
+    <button type="button" class="calc-macros-btn" id="calcMacrosBtn">Calculate Macros</button>
+    <div id="macrosResult"></div>
     <div id="ledgerContent">
       <div class="loading-state">Loading entries…</div>
     </div>
@@ -506,6 +569,46 @@
     return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
+
+  const calcMacrosBtn = document.getElementById('calcMacrosBtn');
+  const macrosResult = document.getElementById('macrosResult');
+
+  calcMacrosBtn.addEventListener('click', async function () {
+    const checked = Array.from(document.querySelectorAll('.day-select:checked')).map(function (cb) { return cb.value; });
+
+    if (checked.length === 0) {
+      macrosResult.innerHTML = '<div class="empty-state">Check at least one date first.</div>';
+      return;
+    }
+    if (!API_URL) return;
+
+    calcMacrosBtn.disabled = true;
+    calcMacrosBtn.textContent = 'Calculating…';
+    macrosResult.innerHTML = '<div class="loading-state">Crunching numbers…</div>';
+
+    try {
+      const res = await fetch(API_URL + '?action=macros&dates=' + encodeURIComponent(checked.join(',')));
+      const data = await res.json();
+      if (data.status !== 'success') throw new Error(data.message || 'Failed to calculate');
+
+      let html = '<div class="macros-total">';
+      html += '<div class="macro-row"><span>Calories</span><span>' + data.total.calories + '</span></div>';
+      html += '<div class="macro-row"><span>Protein</span><span>' + data.total.protein + ' g</span></div>';
+      html += '<div class="macro-row"><span>Fiber</span><span>' + data.total.fiber + ' g</span></div>';
+      html += '</div>';
+
+      if (data.missing && data.missing.length > 0) {
+        html += '<div class="macros-missing">No nutrition match for: ' + data.missing.map(escapeHtml).join(', ') + '</div>';
+      }
+      macrosResult.innerHTML = html;
+    } catch (err) {
+      macrosResult.innerHTML = '<div class="empty-state">Could not calculate — ' + escapeHtml(err.message) + '</div>';
+    } finally {
+      calcMacrosBtn.disabled = false;
+      calcMacrosBtn.textContent = 'Calculate Macros';
+    }
+  });
+
   async function loadLedger() {
     if (!API_URL) {
       ledgerContent.innerHTML = '<div class="empty-state">Connect API_URL to see saved entries here.</div>';
@@ -532,12 +635,13 @@
 
       let html = '';
         dates.forEach(function (date, idx) {
-        const expanded = idx === 0; // most recent day starts open, rest start collapsed
+        const expanded = idx === 0;
         html += '<div class="day-group">';
-        html += '<button type="button" class="day-stamp' + (expanded ? ' expanded' : '') +
-                '" onclick="toggleDay(this)">' +
-                '<span>' + formatDateLabel(date) + '</span>' +
-                '<span class="chevron">▶</span></button>';
+        html += '<div class="day-stamp' + (expanded ? ' expanded' : '') + '" onclick="toggleDay(this)">';
+        html += '<label class="day-checkbox" onclick="event.stopPropagation()">' +
+                '<input type="checkbox" class="day-select" value="' + date + '"></label>';
+        html += '<span class="day-label">' + formatDateLabel(date) + '</span>';
+        html += '<span class="chevron">▶</span></div>';
         html += '<div class="day-entries' + (expanded ? ' expanded' : '') + '">';
         byDate[date].forEach(function (en) {
             html += '<div class="stub"><span class="food-name">' + escapeHtml(en.food) + '</span>' +
