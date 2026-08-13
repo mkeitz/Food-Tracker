@@ -195,8 +195,12 @@
 
     .row-3 {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 0.75rem;
+    }
+
+    .row-3 .field label {
+    white-space: nowrap;
     }
 
   .status-msg {
@@ -487,19 +491,16 @@
                 <div class="row-3">
                 <div class="field">
                     <label for="manualCalories">Calories</label>
-                    <input type="number" id="manualCalories" step="any" min="0" placeholder="e.g. 150">
+                    <input type="number" id="manualCalories" step="any" min="0">
                 </div>
                 <div class="field">
                     <label for="manualProtein">Protein (g)</label>
-                    <input type="number" id="manualProtein" step="any" min="0" placeholder="e.g. 12">
+                    <input type="number" id="manualProtein" step="any" min="0">
                 </div>
                 <div class="field">
                     <label for="manualFiber">Fiber (g)</label>
-                    <input type="number" id="manualFiber" step="any" min="0" placeholder="e.g. 3">
+                    <input type="number" id="manualFiber" step="any" min="0">
                 </div>
-                </div>
-                <div class="sub" style="margin-top: -0.5rem; margin-bottom: 0.5rem;">
-                Enter the totals for the amount you're logging — not per 100g. Leave blank to look these up automatically instead.
                 </div>
             </div>
             </div>
