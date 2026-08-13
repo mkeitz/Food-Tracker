@@ -349,10 +349,23 @@
     margin-bottom: 0.5rem;
     position: relative;
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.6rem;
+    }
+
+   .stub .food-name { flex: 1; }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    opacity: 0.45;
+    padding: 0;
+    line-height: 1;
   }
+
+  .delete-btn:hover { opacity: 1; } 
 
   .stub::after {
     content: "";
@@ -638,8 +651,12 @@
         html += '<span class="chevron">▶</span></div>';
         html += '<div class="day-entries' + (expanded ? ' expanded' : '') + '">';
         byDate[date].forEach(function (en) {
-            html += '<div class="stub"><span class="food-name">' + escapeHtml(en.food) + '</span>' +
-                    '<span class="qty">' + escapeHtml(String(en.quantity)) + ' ' + escapeHtml(en.unit) + '</span></div>';
+            html += '<div class="stub">' +
+                    '<span class="food-name">' + escapeHtml(en.food) + '</span>' +
+                    '<span class="qty">' + escapeHtml(String(en.quantity)) + ' ' + escapeHtml(en.unit) + '</span>' +
+                    '<button type="button" class="delete-btn" data-date="' + escapeHtml(date) +
+                    '" data-food="' + escapeHtml(en.food) + '" data-unit="' + escapeHtml(en.unit) + '">🗑️</button>' +
+                    '</div>';
         });
         html += '</div></div>';
         });
@@ -648,6 +665,30 @@
       ledgerContent.innerHTML = '<div class="empty-state">Could not load entries — ' + escapeHtml(err.message) + '</div>';
     }
   }
+
+  ledgerContent.addEventListener('click', async function (e) {
+    if (!e.target.classList.contains('delete-btn')) return;
+    const btn = e.target;
+    const date = btn.dataset.date;
+    const food = btn.dataset.food;
+    const unit = btn.dataset.unit;
+
+    if (!confirm('Remove "' + food + '" from ' + date + '?')) return;
+
+    try {
+        const res = await fetch(API_URL + '?action=delete&date=' + encodeURIComponent(date) +
+                                '&food=' + encodeURIComponent(food) +
+                                '&unit=' + encodeURIComponent(unit));
+        const data = await res.json();
+        if (data.status === 'success') {
+        loadLedger();
+        } else {
+        alert('Could not delete: ' + (data.message || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Could not delete: ' + err.message);
+    }
+    });
 
   function toggleDay(stampEl) {
     stampEl.classList.toggle('expanded');
