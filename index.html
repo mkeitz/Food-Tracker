@@ -174,6 +174,31 @@
   .submit-btn:active { transform: translateY(1px); }
   .submit-btn:disabled { opacity: 0.6; cursor: default; }
 
+  .manual-toggle {
+    background: none;
+    border: none;
+    color: var(--teal);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 0.75rem;
+    }
+
+    .manual-fields {
+    display: none;
+    }
+
+    .manual-fields.open {
+    display: block;
+    }
+
+    .row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    }
+
   .status-msg {
     margin-top: 1rem;
     font-family: 'IBM Plex Mono', monospace;
@@ -456,6 +481,28 @@
           <label for="unit">Unit</label>
           <input type="text" id="unit" required>
         </div>
+        <div class="field">
+            <button type="button" class="manual-toggle" id="manualToggle">+ Enter nutrition manually (optional)</button>
+            <div class="manual-fields" id="manualFields">
+                <div class="row-3">
+                <div class="field">
+                    <label for="manualCalories">Calories</label>
+                    <input type="number" id="manualCalories" step="any" min="0" placeholder="e.g. 150">
+                </div>
+                <div class="field">
+                    <label for="manualProtein">Protein (g)</label>
+                    <input type="number" id="manualProtein" step="any" min="0" placeholder="e.g. 12">
+                </div>
+                <div class="field">
+                    <label for="manualFiber">Fiber (g)</label>
+                    <input type="number" id="manualFiber" step="any" min="0" placeholder="e.g. 3">
+                </div>
+                </div>
+                <div class="sub" style="margin-top: -0.5rem; margin-bottom: 0.5rem;">
+                Enter the totals for the amount you're logging — not per 100g. Leave blank to look these up automatically instead.
+                </div>
+            </div>
+            </div>
       </div>
 
       <div class="field">
@@ -501,6 +548,16 @@
   const ledgerTab = document.getElementById('ledgerTab');
   const backdrop = document.getElementById('backdrop');
 
+  const manualToggle = document.getElementById('manualToggle');
+  const manualFields = document.getElementById('manualFields');
+
+  manualToggle.addEventListener('click', function () {
+  manualFields.classList.toggle('open');
+  manualToggle.textContent = manualFields.classList.contains('open')
+      ? '− Enter nutrition manually (optional)'
+      : '+ Enter nutrition manually (optional)';
+  });
+
   // Default the date field to today (local time, not UTC)
   function todayString() {
     const d = new Date();
@@ -531,7 +588,10 @@
       date: dateInput.value,
       food: document.getElementById('food').value.trim(),
       quantity: document.getElementById('quantity').value,
-      unit: document.getElementById('unit').value.trim()
+      unit: document.getElementById('unit').value.trim(),
+      calories: document.getElementById('manualCalories').value,
+      protein: document.getElementById('manualProtein').value,
+      fiber: document.getElementById('manualFiber').value
     };
 
     submitBtn.disabled = true;
@@ -555,6 +615,9 @@
         document.getElementById('food').value = '';
         document.getElementById('quantity').value = '';
         document.getElementById('unit').value = '';
+        document.getElementById('manualCalories').value = '';
+        document.getElementById('manualProtein').value = '';
+        document.getElementById('manualFiber').value = '';
         document.getElementById('food').focus();
         loadLedger();
       } else {
