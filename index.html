@@ -681,7 +681,15 @@
                                 '&unit=' + encodeURIComponent(unit));
         const data = await res.json();
         if (data.status === 'success') {
-        loadLedger();
+            statusMsg.textContent = data.action === 'updated'
+                ? `${data.food} added.`
+                : `${data.food} added.`;
+            statusMsg.className = 'status-msg ok';
+            document.getElementById('food').value = '';
+            document.getElementById('quantity').value = '';
+            document.getElementById('unit').value = '';
+            document.getElementById('food').focus();
+            loadLedger();
         } else {
         alert('Could not delete: ' + (data.message || 'Unknown error'));
         }
